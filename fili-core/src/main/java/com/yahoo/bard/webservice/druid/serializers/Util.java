@@ -3,6 +3,7 @@
 package com.yahoo.bard.webservice.druid.serializers;
 
 import com.yahoo.bard.webservice.data.dimension.Dimension;
+import com.yahoo.bard.webservice.druid.model.datasource.DefaultDataSourceType;
 import com.yahoo.bard.webservice.druid.model.query.DruidQuery;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -43,5 +44,26 @@ public class Util {
         }
         // If we cannot find the physical name, then return empty optional.
         return Optional.empty();
+    }
+
+    /**
+     * JSON tree walk to determine if there is a nested query below the current json node or not.
+     *
+     * @param gen  the Json Generator to retrieve the tree to walk on
+     *
+     * @return  a Boolean where true indicates there are more nested query below this node, false otherwise
+     */
+    public static Boolean moreNestedQuery(JsonGenerator gen) {
+        JsonStreamContext context = gen.getOutputContext();
+
+        while (context != null) {
+            Object parent = context.getCurrentValue();
+            if (parent instanceof DruidQuery) {
+                return ((DruidQuery) parent).getDataSource().getType().equals(DefaultDataSourceType.QUERY);
+            }
+            context = context.getParent();
+        }
+        // return false if we can not find a datasource
+        return false;
     }
 }
